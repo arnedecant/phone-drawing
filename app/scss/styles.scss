@@ -1,0 +1,104 @@
+$color-default: #ffffff;
+$color-background: #333333;
+$color-success: #2ecc71;
+$color-error: #e74c3c;
+$font-primary: 'Open Sans', Arial, Sans-Serif;
+
+:root {
+	font-size: 62.5%;
+	overflow: hidden;
+	width: 100%;
+	height: 100vh;
+	line-height: 1.5;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	position: relative;
+	font-family: $font-primary;
+	background-image: url('../img/background.jpg');
+	background-size: cover;
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+
+canvas {
+	width: 100%;
+	height: 100%;
+	cursor: none;
+}
+
+ul {
+	li {
+		display: flex;
+	}
+
+	span {
+		display: block;
+	}
+
+	span.label {
+		font-weight: bold;
+		margin-right: 5px;
+	}
+}
+
+input {
+	font-size: 1.6rem;
+	line-height: 1;
+	padding: .5rem .8rem;	
+}
+
+.modal-container {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background-color: rgba(0,0,0,0.3);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	z-index: -1;
+	opacity: 0;
+	transition: all .3s ease;
+
+	&.toggled {
+		z-index: 9999;
+		opacity: 1;
+	}
+
+	article.modal {
+		width: 90%;
+		height: auto;
+		opacity: 0;
+		max-width: 60rem;
+		margin-top: 10rem;
+		background-color: $color-default;
+		transform: translate(0, -5rem);
+		transition: all .3s ease .2s;
+		padding: 2rem;
+		box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+
+		&.toggled {
+			opacity: 1;
+			transform: translate(0, 0);
+
+			&.out {
+				opacity: 0;
+				transform: translate(-5rem, 0);
+			}
+		}
+
+		header {
+			font-size: 1.8rem;
+			font-weight: 500;
+			margin-bottom: 1.2rem;
+		}
+	}
+}
