@@ -1,5 +1,8 @@
 $color-default: #ffffff;
+$color-default-alt: #333333;
 $color-background: #333333;
+$color-primary: #18d9d8;
+$color-secondary: #db504e;
 $color-success: #2ecc71;
 $color-error: #e74c3c;
 $font-primary: 'Open Sans', Arial, Sans-Serif;
@@ -33,6 +36,79 @@ canvas {
 	cursor: none;
 }
 
+a, button {
+	cursor: pointer;
+	text-decoration: none;
+	border: 0;
+	font-size: 1.5rem;
+	box-shadow: none;
+	line-height: 1.5;
+	display: inline-flex;
+	align-items: center;
+	align-content: center;
+	justify-content: center;
+	background: transparent;
+	color: $color-default-alt;
+	transition: all .2s ease;
+
+	&.btn {
+		line-height: 1;
+		padding: 1rem 1.5rem;
+		background-color: $color-default;
+		color: $color-default;
+		text-transform: uppercase;
+		font-weight: 600;
+		letter-spacing: 0.6rem;
+		overflow: hidden;
+		width: 12rem;
+		position: relative;
+		border: 5px solid $color-default;
+		box-shadow: 0 0 20px 0 rgba($color-primary, 0.5);
+
+		span, i {
+			z-index: 1;
+		}
+
+		&:before, &:after {
+			content: '';
+			display: block;
+			position: absolute;
+			z-index: 0;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 12rem;
+			transition: all .2s ease;
+		}
+
+		&:before {
+			background-color: $color-primary;
+			transform: rotate(45deg) translate(-75%, -25%);
+		}
+
+		&:after {
+			background-color: $color-secondary;
+			transform: rotate(45deg) translate(25%, -25%);
+		}
+
+		&:hover {
+			// background-color: $color-default;
+			color: $color-default-alt;
+			border-color: $color-default-alt;
+			background-color: $color-default-alt;
+			box-shadow: 0 0 20px 0 rgba($color-default, 0.5);
+
+			&:before {
+				transform: rotate(50deg) translate(-50%, -25%);
+			}
+
+			&:after {
+				transform: rotate(50deg) translate(50%, -25%);
+			}
+		}
+	}
+}
+
 ul {
 	li {
 		display: flex;
@@ -51,7 +127,19 @@ ul {
 input {
 	font-size: 1.6rem;
 	line-height: 1;
-	padding: .5rem .8rem;	
+	padding: .5rem .8rem;
+	border: 0;
+	transition: all .2s ease;
+	box-shadow: -0.5rem -0.5rem 2rem 0 rgba($color-secondary, 0);
+	background-color: rgba($color-default, 0.8);
+	text-transform: uppercase;
+	letter-spacing: 0.3rem;
+	font-size: 1.8rem;
+
+	&:focus {
+		outline: 0;
+		box-shadow: -0.5rem -0.5rem 2rem 0.25rem rgba($color-secondary, 0.5), 0.5rem 0.5rem 2rem 0.25rem rgba($color-primary, 0.5);
+	}	
 }
 
 .modal-container {
@@ -61,9 +149,6 @@ input {
 	width: 100%;
 	height: 100vh;
 	background-color: rgba(0,0,0,0.3);
-	display: flex;
-	flex-direction: column;
-	align-items: center;
 	z-index: -1;
 	opacity: 0;
 	transition: all .3s ease;
@@ -74,31 +159,68 @@ input {
 	}
 
 	article.modal {
+		position: fixed;
+		top: 0;
+		left: 50%;
+		z-index: -1;
 		width: 90%;
 		height: auto;
 		opacity: 0;
 		max-width: 60rem;
 		margin-top: 10rem;
-		background-color: $color-default;
-		transform: translate(0, -5rem);
+		background-color: rgba($color-background, 0.95);
+		transform: translate(-50%, -5rem);
 		transition: all .3s ease .2s;
-		padding: 2rem;
-		box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+		padding: 5rem;
+		box-shadow: 0 14px 28px rgba($color-default,0.25), 0 10px 10px rgba($color-default,0.22);
+		// box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+		// box-shadow: -0.5rem -0.5rem 2rem 0 rgba($color-secondary, 0.5), 0.5rem 0.5rem 2rem 0 rgba($color-primary, 0.5);
 
 		&.toggled {
-			opacity: 1;
-			transform: translate(0, 0);
+			&, &.in {
+				z-index: 9999;
+				opacity: 1;
+				transform: translate(-50%, 0);
+			}
 
 			&.out {
 				opacity: 0;
-				transform: translate(-5rem, 0);
+				transform: translate(-75%, 0);
 			}
 		}
 
+		&.in {
+			transform: translate(-25%, 0);
+		}
+
 		header {
-			font-size: 1.8rem;
-			font-weight: 500;
-			margin-bottom: 1.2rem;
+			font-size: 2.8rem;
+			font-weight: 600;
+			color: $color-default;
+			text-transform: uppercase;
+			letter-spacing: 0.6rem;
+			margin-bottom: 3rem;
+			text-align: center;
+		}
+
+		form {
+			display: flex;
+			align-items: stretch;
+			justify-content: stretch;
+			position: relative;
+
+			input {
+				flex-grow: 1;
+				margin-right: 2rem;
+			}
+
+			&.login-form {
+				button.nobtn {
+					position: absolute;
+					z-index: 1;
+					right: 0;
+				}
+			}
 		}
 	}
 }

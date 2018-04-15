@@ -14,7 +14,8 @@ window.onload = function() {
 
 function initLogin() {
 	const modalContainer = document.querySelector('section.modal-container'),
-		modals = document.querySelectorAll('section.modal-container article.modal');
+		modals = document.querySelectorAll('section.modal-container article.modal'),
+		modalButtons = document.querySelectorAll('section.modal-container article.modal.device-modal button');
 
 	modalContainer.classList.add('toggled');
 	modals[0].classList.add('toggled');
@@ -28,6 +29,11 @@ function initLogin() {
 				key: config.key
 			});
 		}
+	});
+
+	document.querySelector('form.device-form').addEventListener('submit', function(e) {
+	    e.preventDefault();
+	    modals[1].classList.remove('toggled', 'in');
 	});
 
 	socket.on('access', function(data){
