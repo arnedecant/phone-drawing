@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Particles | Arne Decant</title>
+	<title>Phone drawing | Arne Decant</title>
 	<meta name="viewport" content="width=device-width" />
-	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
 	<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700" rel="stylesheet" type="text/css">
 	<link href="css/styles.css" rel="stylesheet" type="text/css">
 </head>
@@ -13,21 +13,25 @@
 			<header>Pair your devices</header>
 			<div class="modal-content">
 				<form class="login-form">
-					<input type="text" class="key" name="key" value="kittens" />
-					<button type="submit" class="nobtn"><span>Next</span></button>
+					<input type="text" class="key" name="key" value="kittens" autofocus />
+					<button type="submit" class="nobtn"><i class="fas fa-long-arrow-alt-right"></i></button>
 				</form>
 			</div>
 		</article>
 		<article class="modal in">
-			<header>Select device function</header>
+			<header>Select device</header>
 			<div class="modal-content">
 				<form class="device-form">
-					<button type="submit" class="btn btn-function" data-function="canvas"><span>Canvas</span></button>
-					<button type="submit" class="btn btn-function" data-function="brush"><span>Brush</span></button>
+					<button type="submit" class="btn btn-function" data-type="canvas"><span>Canvas</span></button>
+					<button type="submit" class="btn btn-function" data-type="brush"><span>Brush</span></button>
 				</form>
 			</div>
 		</article>
 	</section>
+	<section class="canvas">
+		<div class="log"></div>
+	</section>
+	<section class="brush"></section>
 
 	<!-- <section class="orientation">
 		<h2>Orientation</h2>

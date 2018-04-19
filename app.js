@@ -22,6 +22,12 @@ var server = io.on('connection', function (socket) {
 			});
 		}
 	});
+
+	socket.on('brush:move', function(data) {
+		server.emit('log', {
+			log: data
+		})
+	});
 });
 
 console.log('Your app is running on http://localhost:' + port);

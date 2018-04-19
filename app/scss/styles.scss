@@ -49,24 +49,36 @@ a, button {
 	justify-content: center;
 	background: transparent;
 	color: $color-default-alt;
+	outline: 0;
 	transition: all .2s ease;
 
 	&.btn {
 		line-height: 1;
-		padding: 1rem 1.5rem;
-		background-color: $color-default;
+		padding: 0.5rem;
+		background-color: $color-background;
 		color: $color-default;
 		text-transform: uppercase;
 		font-weight: 600;
 		letter-spacing: 0.6rem;
 		overflow: hidden;
-		width: 12rem;
+		width: 16rem;
+		height: 6rem;
 		position: relative;
-		border: 5px solid $color-default;
+		// border: 5px solid $color-background;
 		box-shadow: 0 0 20px 0 rgba($color-primary, 0.5);
+		flex-direction: column;
+		align-items: stretch;
+		justify-content: stretch;
+		font-size: 1.8rem;
 
 		span, i {
 			z-index: 1;
+			display: block;
+			background-color: $color-background;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex: 1;
 		}
 
 		&:before, &:after {
@@ -76,34 +88,34 @@ a, button {
 			z-index: 0;
 			top: 0;
 			left: 0;
-			width: 100%;
-			height: 12rem;
+			width: 200%;
+			height: 200%;
 			transition: all .2s ease;
 		}
 
 		&:before {
 			background-color: $color-primary;
-			transform: rotate(45deg) translate(-75%, -25%);
+			transform: rotate(45deg) translate(-30%, 75%);
 		}
 
 		&:after {
 			background-color: $color-secondary;
-			transform: rotate(45deg) translate(25%, -25%);
+			transform: rotate(45deg) translate(-10%, -20%);
 		}
 
 		&:hover {
 			// background-color: $color-default;
-			color: $color-default-alt;
+			color: $color-primary;
 			border-color: $color-default-alt;
 			background-color: $color-default-alt;
 			box-shadow: 0 0 20px 0 rgba($color-default, 0.5);
 
 			&:before {
-				transform: rotate(50deg) translate(-50%, -25%);
+				transform: rotate(60deg) translate(0%, 75%);
 			}
 
 			&:after {
-				transform: rotate(50deg) translate(50%, -25%);
+				transform: rotate(60deg) translate(20%, -20%);
 			}
 		}
 	}
@@ -212,7 +224,11 @@ input {
 
 			input {
 				flex-grow: 1;
-				margin-right: 2rem;
+			}
+
+			&.device-form {
+				justify-content: space-between;
+				margin: 1rem 0 0 0;
 			}
 
 			&.login-form {
@@ -220,6 +236,14 @@ input {
 					position: absolute;
 					z-index: 1;
 					right: 0;
+					font-size: 3.6rem;
+					padding: 0 2rem;
+    				height: 100%;
+    				opacity: 1;
+
+    				&:hover {
+    					opacity: 0.8;
+    				}
 				}
 			}
 		}

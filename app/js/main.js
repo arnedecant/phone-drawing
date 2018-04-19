@@ -2,7 +2,7 @@ let isMobile = false;
 let config = {
 	key: null,
 	device: {
-		function: null
+		type: null
 	}
 }
 let key = '';
@@ -10,12 +10,16 @@ const socket = io();
 
 window.onload = function() {
 	initLogin();
+
+	socket.on('log', (data) => {
+		console.log(data.log);
+	});
 }
 
 function initLogin() {
 	const modalContainer = document.querySelector('section.modal-container'),
 		modals = document.querySelectorAll('section.modal-container article.modal'),
-		modalButtons = document.querySelectorAll('section.modal-container article.modal.device-modal button');
+		modalButtons = document.querySelectorAll('section.modal-container article.modal form.device-form button');
 
 	modalContainer.classList.add('toggled');
 	modals[0].classList.add('toggled');
@@ -31,11 +35,6 @@ function initLogin() {
 		}
 	});
 
-	document.querySelector('form.device-form').addEventListener('submit', function(e) {
-	    e.preventDefault();
-	    modals[1].classList.remove('toggled', 'in');
-	});
-
 	socket.on('access', function(data){
 		if(data.access === 'granted') {
 			modals[0].classList.add('out');
@@ -43,28 +42,46 @@ function initLogin() {
 
 			for (let i = 0, btn; btn = modalButtons[i]; i++) {
 				btn.addEventListener('click', function(e) {
-					config.device.function = this.dataset.function;
+					config.device.type = this.dataset.type;
+				    modals[1].classList.remove('toggled', 'in');
 					modalContainer.classList.remove('toggled');
+					initApp();
 				});
 			}
 		}
 	});
+
+	const modalForms = document.querySelectorAll('.modal form');
+	for (let i = 0, form; form = modalForms[i]; i++) {
+		form.addEventListener('submit', function(e) {
+		    e.preventDefault();
+		});
+	}
 }
 
 function initApp() {
-	alert('initApp');
-	// window.addEventListener('devicemotion', function(event) {
-	// 	let acceleration = event.acceleration;
+	if (config.device.type == 'brush') {
+		window.addEventListener('devicemotion', function(e) {
+			let acceleration = e.acceleration;
 
-	// 	if (acceleration && acceleration.x && parseFloat(acceleration.x)) {
-	// 		let ul = document.querySelector('section.acceleration ul');
-	// 		ul.innerHTML = `
-	// 			<li><span class="label">x</span><span class="value">${parseFloat(event.acceleration.x).toFixed(5)} m/s2</span></li>
-	// 			<li><span class="label">y</span><span class="value">${parseFloat(event.acceleration.y).toFixed(5)} m/s2</span></li>
-	// 			<li><span class="label">z</span><span class="value">${parseFloat(event.acceleration.z).toFixed(5)} m/s2</span></li>
-	// 		`;
-	// 	}
-	// });
+			socket.emit('brush:move', {
+				x: e.accelerationIncludingGravity.x.toFixed(5),
+				y: e.accelerationIncludingGravity.y.toFixed(5),
+				z: e.accelerationIncludingGravity.z.toFixed(5)
+			});
+
+			// if (acceleration && acceleration.x && parseFloat(acceleration.x)) {
+			// 	let ul = document.querySelector('section.acceleration ul');
+			// 	ul.innerHTML = `
+			// 		<li><span class="label">x</span><span class="value">${parseFloat(e.acceleration.x).toFixed(5)} m/s2</span></li>
+			// 		<li><span class="label">y</span><span class="value">${parseFloat(e.acceleration.y).toFixed(5)} m/s2</span></li>
+			// 		<li><span class="label">z</span><span class="value">${parseFloat(e.acceleration.z).toFixed(5)} m/s2</span></li>
+			// 	`;
+			// }
+		});
+	} else if (config.device.type == 'canvas') {
+
+	}
 }
 
 function save(property, value) {
