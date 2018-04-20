@@ -23,7 +23,7 @@ var server = io.on('connection', function (socket) {
 		}
 	});
 
-	socket.on('brush:move', function(data) {
+	socket.on('brush:draw', function(data) {
 		server.emit('log', {
 			log: data
 		})

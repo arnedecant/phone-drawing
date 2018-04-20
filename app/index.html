@@ -22,16 +22,20 @@
 			<header>Select device</header>
 			<div class="modal-content">
 				<form class="device-form">
-					<button type="submit" class="btn btn-function" data-type="canvas"><span>Canvas</span></button>
-					<button type="submit" class="btn btn-function" data-type="brush"><span>Brush</span></button>
+					<button type="submit" class="btn btn-highlight btn-function" data-type="canvas"><span>Canvas</span></button>
+					<button type="submit" class="btn btn-highlight btn-function" data-type="brush"><span>Brush</span></button>
 				</form>
 			</div>
 		</article>
 	</section>
-	<section class="canvas">
+	<section class="main canvas">
+		<canvas></canvas>
 		<div class="log"></div>
 	</section>
-	<section class="brush"></section>
+	<section class="main brush">
+		<ul class="colors"></ul>
+		<button class="btn btn-draw" data-color>Draw</button>
+	</section>
 
 	<!-- <section class="orientation">
 		<h2>Orientation</h2>
