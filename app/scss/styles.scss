@@ -6,6 +6,7 @@ $color-secondary: #db504e;
 $color-success: #2ecc71;
 $color-error: #e74c3c;
 $font-primary: 'Open Sans', Arial, Sans-Serif;
+$font-log: monospace;
 $shadow-primary: -0.25rem -0.25rem 1rem 0.25rem rgba($color-secondary, 0.75), 0.25rem 0.25rem 1rem 0.25rem rgba($color-primary, 0.75);
 $shadow-secondary: 0 0 1rem 0.25rem rgba($color-default, 0.75);
 
@@ -395,5 +396,18 @@ section.canvas {
 	canvas {
 		width: 100%;
 		height: 100%;
+	}
+}
+
+.log {
+	font-family: $font-log;
+	color: $color-default;
+	font-size: 1.5rem;
+	width: 100%;
+	overflow-y: auto;
+
+	table {
+		width: 100%;
+    	text-align: right;
 	}
 }

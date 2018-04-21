@@ -24,9 +24,15 @@ var server = io.on('connection', function (socket) {
 	});
 
 	socket.on('brush:draw', function(data) {
-		server.emit('log', {
-			log: data
-		})
+		server.emit('log:acceleration', {
+			acceleration: data.acceleration
+		});
+	});
+
+	socket.on('brush:move', function(data) {
+		// server.emit('log:acceleration', {
+		// 	acceleration: data.acceleration
+		// });
 	});
 });
 

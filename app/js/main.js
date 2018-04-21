@@ -1,27 +1,28 @@
-let isMobile = false,
-	key = '';
-	config = {
-		key: null,
-		device: {
-			type: null
-		},
-		colors: ['#FFFFFF', '#333333', '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c']
-	},
-	brush = {
-		isDrawing: false,
-		color: config.colors[0]
-	},
-	canvas = {
-		isDrawing: false
-	};
 const socket = io();
+let config = {
+	key: null,
+	device: {
+		type: null
+	},
+	colors: ['#FFFFFF', '#333333', '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c'],
+	log: {
+		size: 50
+	}
+};
+let brush = {
+	isDrawing: false,
+	color: config.colors[0]
+};
+let canvas = {
+	isDrawing: false
+};
 
 window.onload = function() {
 	setVWVH();
 	initLogin();
 
-	socket.on('log', (data) => {
-		console.log(data.log);
+	socket.on('log:console', (data) => {
+		console.log(data);
 	});
 }
 
@@ -89,19 +90,42 @@ function initApp() {
 					}
 				})
 			}
-
-			// if (acceleration && acceleration.x && parseFloat(acceleration.x)) {
-			// 	let ul = document.querySelector('section.acceleration ul');
-			// 	ul.innerHTML = `
-			// 		<li><span class="label">x</span><span class="value">${parseFloat(e.acceleration.x).toFixed(5)} m/s2</span></li>
-			// 		<li><span class="label">y</span><span class="value">${parseFloat(e.acceleration.y).toFixed(5)} m/s2</span></li>
-			// 		<li><span class="label">z</span><span class="value">${parseFloat(e.acceleration.z).toFixed(5)} m/s2</span></li>
-			// 	`;
-			// }
 		});
 	} else if (config.device.type == 'canvas') {
+		const [canvas, context] = setupCanvas();
+		socket.on('log:acceleration', (data) => {
+			document.querySelector('.log > table tbody').innerHTML += `
+				<tr>
+					<td>${data.acceleration.x}</td>
+					<td>${data.acceleration.y}</td>
+					<td>${data.acceleration.z}</td>
+				</tr>
+			`;
 
+			let rows = document.querySelectorAll('.log > table tbody tr');
+			if (rows.length >= config.log.size) {
+				rows[0].remove();
+			}
+
+			document.querySelector('.log').scrollTop = document.querySelector('.log > table').offsetHeight;
+		});
 	}
+}
+
+function setupCanvas() {
+	let canvas = document.querySelector("canvas");
+	const context = canvas.getContext("2d");
+	canvas.width = document.body.clientWidth;
+	canvas.height = document.body.clientHeight;
+
+	window.addEventListener('resize', (e) => {
+		const scale = document.body.clientWidth / canvas.offsetWidth;
+		canvas.width = document.body.clientWidth;
+		canvas.height = document.body.clientHeight;
+		canvas.scale(scale);
+	}, true);
+
+	return [canvas, context];
 }
 
 function initLogin() {
@@ -241,7 +265,16 @@ Object.prototype.addMultiEventListener = function(s, fn, options) {
 	s.split(' ').map(e => this.addEventListener(e, fn, options));
 }
 
-
+Element.prototype.remove = function() {
+    this.parentElement.removeChild(this);
+}
+NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
+    for(var i = this.length - 1; i >= 0; i--) {
+        if(this[i] && this[i].parentElement) {
+            this[i].parentElement.removeChild(this[i]);
+        }
+    }
+}
 
 
 
