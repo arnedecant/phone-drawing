@@ -1,6 +1,7 @@
 const socket = io();
 let config = {
 	key: null,
+	multiplier: 10,
 	device: {
 		type: null
 	},
@@ -11,11 +12,16 @@ let config = {
 };
 let brush = {
 	isDrawing: false,
-	color: config.colors[0]
+	color: config.colors[0],
+	pos: {
+		x: 0,
+		y: 0
+	}
 };
 let canvas = {
 	isDrawing: false
 };
+let lines = [];
 
 window.onload = function() {
 	setVWVH();
@@ -93,7 +99,12 @@ function initApp() {
 		});
 	} else if (config.device.type == 'canvas') {
 		const [canvas, context] = setupCanvas();
-		socket.on('log:acceleration', (data) => {
+		let prevAcceleration = {x: (canvas.width / 2), y: 0, z: ((canvas.height / 2) + 10)},
+			thisAcceleration = prevAcceleration;
+
+		console.log(prevAcceleration);
+
+		socket.on('canvas:move', (data) => {
 			document.querySelector('.log > table tbody').innerHTML += `
 				<tr>
 					<td>${data.acceleration.x}</td>
@@ -102,14 +113,51 @@ function initApp() {
 				</tr>
 			`;
 
+			thisAcceleration = {
+				x: prevAcceleration.x - parseFloat(data.acceleration.x),
+				y: prevAcceleration.y - parseFloat(data.acceleration.y),
+				z: prevAcceleration.z - parseFloat(data.acceleration.z),
+			};
+
+			// parseInt because I don't want the decimals anyway, there are no 0.005 pixels...
+			brush.pos.x += thisAcceleration.x;
+			brush.pos.y += thisAcceleration.z;
+
 			let rows = document.querySelectorAll('.log > table tbody tr');
 			if (rows.length >= config.log.size) {
 				rows[0].remove();
 			}
 
 			document.querySelector('.log').scrollTop = document.querySelector('.log > table').offsetHeight;
+
+			prevAcceleration = data.acceleration;
+		});
+
+		socket.on('canvas:draw', (data) => {
+			console.log(brush.pos);
+			draw({
+				canvas: canvas,
+				context: context,
+				brush: brush,
+				color: data.color
+			});
 		});
 	}
+}
+
+function brushDraw(vars) {
+	let rgbColor = getRGB(vars.color);
+	if (!rgbColor) return;
+
+	vars.context.beginPath();
+	vars.context.fillStyle = `rgb(${rgbColor[0]},${rgbColor[1]},${rgbColor[2]})`;
+	vars.context.arc(vars.brush.pos.x, vars.brush.pos.y, 20, 0, Math.PI * 2, false);
+	vars.context.closePath();
+	vars.context.fill();
+}
+
+function brushMove(vars) {
+
 }
 
 function setupCanvas() {
@@ -122,7 +170,7 @@ function setupCanvas() {
 		const scale = document.body.clientWidth / canvas.offsetWidth;
 		canvas.width = document.body.clientWidth;
 		canvas.height = document.body.clientHeight;
-		canvas.scale(scale);
+		context.scale(scale);
 	}, true);
 
 	return [canvas, context];

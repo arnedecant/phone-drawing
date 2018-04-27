@@ -24,15 +24,16 @@ var server = io.on('connection', function (socket) {
 	});
 
 	socket.on('brush:draw', function(data) {
-		server.emit('log:acceleration', {
-			acceleration: data.acceleration
+		server.emit('canvas:draw', {
+			acceleration: data.acceleration,
+			color: data.color
 		});
 	});
 
 	socket.on('brush:move', function(data) {
-		// server.emit('log:acceleration', {
-		// 	acceleration: data.acceleration
-		// });
+		server.emit('canvas:move', {
+			acceleration: data.acceleration
+		});
 	});
 });
 

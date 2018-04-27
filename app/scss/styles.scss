@@ -371,6 +371,7 @@ section.brush {
 
 			&:nth-child(even) {
 				margin-right: 0;
+				justify-content: flex-end;
 			}
 		}
 	}
