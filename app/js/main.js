@@ -8,6 +8,12 @@ let config = {
 	colors: ['#FFFFFF', '#333333', '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c'],
 	log: {
 		size: 50
+	},
+	canvas: {
+		size: 5,
+		lineJoin: "round",
+		color: "#333333",
+		backgroundColor: "#FFFFFF"
 	}
 };
 let brush = {
@@ -27,7 +33,7 @@ window.onload = function() {
 	setVWVH();
 	initLogin();
 
-	socket.on('log:console', (data) => {
+	socket.on('log', (data) => {
 		console.log(data);
 	});
 }
@@ -73,33 +79,58 @@ function initApp() {
 			brush.isDrawing = false;
 		});
 
+		let velocity = {
+			x: 0, 
+			y: 0,
+			z: 0
+		};
+
 		window.addEventListener('devicemotion', (e) => {
-			let acceleration = e.accelerationIncludingGravity;
+			let acceleration = e.acceleration;
 
 			if (!acceleration || !acceleration.x) return;
 
-			if (brush.isDrawing) {
-				socket.emit('brush:draw', {
-					acceleration: {
-						x: acceleration.x.toFixed(5),
-						y: acceleration.y.toFixed(5),
-						z: acceleration.z.toFixed(5)
-					},
-					color: brush.color
-				});
-			} else {
-				socket.emit('brush:move', {
-					acceleration: {
-						x: acceleration.x.toFixed(5),
-						y: acceleration.y.toFixed(5),
-						z: acceleration.z.toFixed(5)
-					}
-				})
-			}
+			velocity.x += acceleration.x * e.interval;
+			velocity.y += acceleration.y * e.interval;
+			velocity.z += acceleration.z * e.interval;
+
+			socket.emit('brush:move', {
+				acceleration: {
+					x: acceleration.x.toFixed(5),
+					y: acceleration.y.toFixed(5),
+					z: acceleration.z.toFixed(5)
+				},
+				velocity: {
+					x: velocity.x.toFixed(5),
+					y: velocity.y.toFixed(5),
+					z: velocity.z.toFixed(5)
+				},
+				color: brush.color
+			});
+
+			socket.emit('log', {
+				type: e.type,
+				interval: e.interval,
+				acceleration: {
+					x: acceleration.x,
+					y: acceleration.y,
+					z: acceleration.z,
+				},
+				rotationRate: {
+					alpha: e.rotationRate.alpha,
+					beta: e.rotationRate.beta,
+					gamma: e.rotationRate.gamma
+				},
+				velocity: {
+					x: velocity.x,
+					y: velocity.y,
+					z: velocity.z
+				}
+			});
 		});
 	} else if (config.device.type == 'canvas') {
 		const [canvas, context] = setupCanvas();
-		let prevAcceleration = {x: (canvas.width / 2), y: 0, z: ((canvas.height / 2) + 10)},
+		let prevAcceleration = {x: (canvas.width / 2), y: 0, z: (canvas.height / 2)},
 			thisAcceleration = prevAcceleration;
 
 		console.log(prevAcceleration);
@@ -107,9 +138,9 @@ function initApp() {
 		socket.on('canvas:move', (data) => {
 			document.querySelector('.log > table tbody').innerHTML += `
 				<tr>
-					<td>${data.acceleration.x}</td>
-					<td>${data.acceleration.y}</td>
-					<td>${data.acceleration.z}</td>
+					<td>${data.velocity.x}</td>
+					<td>${data.velocity.y}</td>
+					<td>${data.velocity.z}</td>
 				</tr>
 			`;
 
@@ -131,11 +162,18 @@ function initApp() {
 			document.querySelector('.log').scrollTop = document.querySelector('.log > table').offsetHeight;
 
 			prevAcceleration = data.acceleration;
+
+			brushMove({
+				canvas: canvas,
+				context: context,
+				brush: brush,
+				color: data.color
+			});
 		});
 
 		socket.on('canvas:draw', (data) => {
 			console.log(brush.pos);
-			draw({
+			brushDraw({
 				canvas: canvas,
 				context: context,
 				brush: brush,
@@ -145,19 +183,37 @@ function initApp() {
 	}
 }
 
-function brushDraw(vars) {
-	let rgbColor = getRGB(vars.color);
-	if (!rgbColor) return;
+function redraw(vars) {
+	vars.context.clearRect(0, 0, vars.context.canvas.width, vars.context.canvas.height); // Clears the canvas
 
 	vars.context.beginPath();
-	vars.context.fillStyle = `rgb(${rgbColor[0]},${rgbColor[1]},${rgbColor[2]})`;
-	vars.context.arc(vars.brush.pos.x, vars.brush.pos.y, 20, 0, Math.PI * 2, false);
+	vars.context.fillStyle = '#ffffff';
+	vars.context.fillRect(0, 0, canvas.width, canvas.height);
 	vars.context.closePath();
-	vars.context.fill();
+
+	vars.context.lineJoin = 'round';
+}
+
+function brushDraw(vars) {
+	// let rgbColor = getRGB(vars.color);
+	// if (!rgbColor) return;
+
+	// vars.context.beginPath();
+	// vars.context.fillStyle = `rgb(${rgbColor[0]},${rgbColor[1]},${rgbColor[2]})`;
+	// vars.context.arc(vars.brush.pos.x, vars.brush.pos.y, 20, 0, Math.PI * 2, false);
+	// vars.context.closePath();
+	// vars.context.fill();
 }
 
 function brushMove(vars) {
-
+	redraw(vars);
+	vars.context.beginPath();
+	vars.context.fillStyle = "rgba(10,10,10,0.8)";
+	vars.context.arc(vars.brush.pos.x, vars.brush.pos.y, config.canvas.size, 0, Math.PI*2, true); 
+	vars.context.lineWidth = 1;
+	vars.context.strokeStyle = config.canvas.color;
+	vars.context.closePath();
+	vars.context.stroke();
 }
 
 function setupCanvas() {
@@ -170,7 +226,7 @@ function setupCanvas() {
 		const scale = document.body.clientWidth / canvas.offsetWidth;
 		canvas.width = document.body.clientWidth;
 		canvas.height = document.body.clientHeight;
-		context.scale(scale);
+		context.scale(scale, scale);
 	}, true);
 
 	return [canvas, context];

@@ -23,16 +23,17 @@ var server = io.on('connection', function (socket) {
 		}
 	});
 
-	socket.on('brush:draw', function(data) {
-		server.emit('canvas:draw', {
+	socket.on('brush:move', function(data) {
+		server.emit('canvas:move', {
 			acceleration: data.acceleration,
+			velocity: data.velocity,
 			color: data.color
 		});
 	});
 
-	socket.on('brush:move', function(data) {
-		server.emit('canvas:move', {
-			acceleration: data.acceleration
+	socket.on('log', function(data) {
+		server.emit('log', {
+			data: data
 		});
 	});
 });
