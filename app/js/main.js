@@ -4,11 +4,11 @@ let config = {
 	multiplier: 10,
 	device: {
 		type: null
-	},
-	colors: ['#FFFFFF', '#333333', '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c'],
+	}, 
+	colors: ['#FFFFFF', '#333333', '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e', '#f1c40f', '#e67e22', '#e74c3c'], 
 	log: {
 		size: 50
-	},
+	}, 
 	canvas: {
 		size: 5,
 		lineJoin: "round",
@@ -22,11 +22,10 @@ let brush = {
 	pos: {
 		x: 0,
 		y: 0
-	}
+	},
+	size: 20
 };
-let canvas = {
-	isDrawing: false
-};
+let canvas, context;
 let lines = [];
 
 window.onload = function() {
@@ -34,7 +33,7 @@ window.onload = function() {
 	initLogin();
 
 	socket.on('log', (data) => {
-		console.log(data);
+		// console.log(data);
 	});
 }
 
@@ -90,9 +89,9 @@ function initApp() {
 
 			if (!acceleration || !acceleration.x) return;
 
-			velocity.x += acceleration.x * e.interval;
-			velocity.y += acceleration.y * e.interval;
-			velocity.z += acceleration.z * e.interval;
+			velocity.x = acceleration.x * e.interval;
+			velocity.y = acceleration.y * e.interval;
+			velocity.z = acceleration.z * e.interval;
 
 			socket.emit('brush:move', {
 				acceleration: {
@@ -129,11 +128,11 @@ function initApp() {
 			});
 		});
 	} else if (config.device.type == 'canvas') {
-		const [canvas, context] = setupCanvas();
+		[canvas, context] = setupCanvas();
 		let prevAcceleration = {x: (canvas.width / 2), y: 0, z: (canvas.height / 2)},
 			thisAcceleration = prevAcceleration;
 
-		console.log(prevAcceleration);
+		// console.log(prevAcceleration);
 
 		socket.on('canvas:move', (data) => {
 			document.querySelector('.log > table tbody').innerHTML += `
@@ -150,9 +149,13 @@ function initApp() {
 				z: prevAcceleration.z - parseFloat(data.acceleration.z),
 			};
 
+			// console.log(brush, data.velocity);
+
 			// parseInt because I don't want the decimals anyway, there are no 0.005 pixels...
-			brush.pos.x += thisAcceleration.x;
-			brush.pos.y += thisAcceleration.z;
+			brush.pos.x += parseFloat(data.velocity.x);
+			brush.pos.y += parseFloat(data.velocity.z);
+
+			checkBounds();
 
 			let rows = document.querySelectorAll('.log > table tbody tr');
 			if (rows.length >= config.log.size) {
@@ -163,57 +166,46 @@ function initApp() {
 
 			prevAcceleration = data.acceleration;
 
-			brushMove({
-				canvas: canvas,
-				context: context,
-				brush: brush,
-				color: data.color
-			});
-		});
-
-		socket.on('canvas:draw', (data) => {
-			console.log(brush.pos);
-			brushDraw({
-				canvas: canvas,
-				context: context,
-				brush: brush,
-				color: data.color
-			});
+			brushMove();
 		});
 	}
 }
 
-function redraw(vars) {
-	vars.context.clearRect(0, 0, vars.context.canvas.width, vars.context.canvas.height); // Clears the canvas
+function redraw() {
+	context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clears the canvas
 
-	vars.context.beginPath();
-	vars.context.fillStyle = '#ffffff';
-	vars.context.fillRect(0, 0, canvas.width, canvas.height);
-	vars.context.closePath();
+	context.beginPath();
+	context.fillStyle = '#ffffff';
+	context.fillRect(0, 0, canvas.width, canvas.height);
+	context.closePath();
 
-	vars.context.lineJoin = 'round';
+	context.lineJoin = 'round';
 }
 
-function brushDraw(vars) {
-	// let rgbColor = getRGB(vars.color);
-	// if (!rgbColor) return;
-
-	// vars.context.beginPath();
-	// vars.context.fillStyle = `rgb(${rgbColor[0]},${rgbColor[1]},${rgbColor[2]})`;
-	// vars.context.arc(vars.brush.pos.x, vars.brush.pos.y, 20, 0, Math.PI * 2, false);
-	// vars.context.closePath();
-	// vars.context.fill();
+function brushMove() {
+	console.log(brush.pos);
+	redraw();
+	context.beginPath();
+	context.fillStyle = "rgba(10,10,10,0.8)";
+	context.arc(
+		parseInt(brush.pos.x), 
+		parseInt(brush.pos.y), 
+		brush.size, 
+		0, 
+		Math.PI*2, 
+		true
+	); 
+	context.lineWidth = 1;
+	context.strokeStyle = config.canvas.color;
+	context.closePath();
+	context.stroke();
 }
 
-function brushMove(vars) {
-	redraw(vars);
-	vars.context.beginPath();
-	vars.context.fillStyle = "rgba(10,10,10,0.8)";
-	vars.context.arc(vars.brush.pos.x, vars.brush.pos.y, config.canvas.size, 0, Math.PI*2, true); 
-	vars.context.lineWidth = 1;
-	vars.context.strokeStyle = config.canvas.color;
-	vars.context.closePath();
-	vars.context.stroke();
+function checkBounds() {
+	if (brush.pos.x <= 0) brush.pos.x = 0;
+	if (brush.pos.x >= canvas.width) brush.pos.x = canvas.width - brush.size;
+	if (brush.pos.y <= 0) brush.pos.y = 0;
+	if (brush.pos.y >= canvas.height) brush.pos.y = canvas.height - brush.size;
 }
 
 function setupCanvas() {
