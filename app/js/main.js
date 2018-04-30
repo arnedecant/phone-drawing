@@ -89,9 +89,9 @@ function initApp() {
 
 			if (!acceleration || !acceleration.x) return;
 
-			velocity.x = acceleration.x * e.interval;
-			velocity.y = acceleration.y * e.interval;
-			velocity.z = acceleration.z * e.interval;
+			velocity.x += (acceleration.x * e.interval) / 10;
+			velocity.y += (acceleration.y * e.interval) / 10;
+			velocity.z += (acceleration.z * e.interval) / 10;
 
 			socket.emit('brush:move', {
 				acceleration: {
@@ -183,7 +183,7 @@ function redraw() {
 }
 
 function brushMove() {
-	console.log(brush.pos);
+	console.log(brush.pos.x, brush.pos.y);
 	redraw();
 	context.beginPath();
 	context.fillStyle = "rgba(10,10,10,0.8)";
