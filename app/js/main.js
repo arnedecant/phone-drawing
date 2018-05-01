@@ -93,6 +93,14 @@ function initApp() {
 			velocity.y += (acceleration.y * e.interval) / 10;
 			velocity.z += (acceleration.z * e.interval) / 10;
 
+			for (var k in velocity){
+				if (velocity.hasOwnProperty(k)) {
+					let val = parseFloat(velocity[k]);
+					if (val > 0) velocity[k] = val--;
+					if (val < 0) velocity[k] = val++;
+				}
+			}
+
 			socket.emit('brush:move', {
 				acceleration: {
 					x: acceleration.x.toFixed(5),
@@ -104,27 +112,8 @@ function initApp() {
 					y: velocity.y.toFixed(5),
 					z: velocity.z.toFixed(5)
 				},
-				color: brush.color
-			});
-
-			socket.emit('log', {
-				type: e.type,
 				interval: e.interval,
-				acceleration: {
-					x: acceleration.x,
-					y: acceleration.y,
-					z: acceleration.z,
-				},
-				rotationRate: {
-					alpha: e.rotationRate.alpha,
-					beta: e.rotationRate.beta,
-					gamma: e.rotationRate.gamma
-				},
-				velocity: {
-					x: velocity.x,
-					y: velocity.y,
-					z: velocity.z
-				}
+				color: brush.color
 			});
 		});
 	} else if (config.device.type == 'canvas') {
@@ -152,8 +141,10 @@ function initApp() {
 			// console.log(brush, data.velocity);
 
 			// parseInt because I don't want the decimals anyway, there are no 0.005 pixels...
-			brush.pos.x += parseFloat(data.velocity.x);
-			brush.pos.y += parseFloat(data.velocity.z);
+			// brush.pos.x += parseFloat(data.velocity.x);
+			// brush.pos.y += parseFloat(data.velocity.z);
+			brush.pos.x += (parseFloat(data.velocity.x) * parseInt(data.interval)) / 10;
+			brush.pos.y += (parseFloat(data.velocity.z) * parseInt(data.interval)) / 10;
 
 			checkBounds();
 

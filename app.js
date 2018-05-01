@@ -27,6 +27,7 @@ var server = io.on('connection', function (socket) {
 		server.emit('canvas:move', {
 			acceleration: data.acceleration,
 			velocity: data.velocity,
+			interval: data.interval,
 			color: data.color
 		});
 	});
