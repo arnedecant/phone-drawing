@@ -33,7 +33,7 @@ window.onload = function() {
 	initLogin();
 
 	socket.on('log', (data) => {
-		// console.log(data);
+		console.log(data);
 	});
 }
 
@@ -84,22 +84,41 @@ function initApp() {
 			z: 0
 		};
 
+		const filter = new HighPassFilterData(0.25);
+		let initial = filter;
+
 		window.addEventListener('devicemotion', (e) => {
 			let acceleration = e.acceleration;
+			let go = false;
 
 			if (!acceleration || !acceleration.x) return;
 
-			velocity.x += (acceleration.x * e.interval) / 10;
-			velocity.y += (acceleration.y * e.interval) / 10;
-			velocity.z += (acceleration.z * e.interval) / 10;
+			filter.update(acceleration, e.interval);
 
-			for (var k in velocity){
-				if (velocity.hasOwnProperty(k)) {
-					let val = parseFloat(velocity[k]);
-					if (val > 0) velocity[k] = val--;
-					if (val < 0) velocity[k] = val++;
+			for (let i of ['x', 'y', 'z']) {
+				if (filter[i] > 0.25 || filter[i] < -0.25) {
+					initial = filter;
+					go = true;
 				}
 			}
+
+			if (!go) return;
+
+			// velocity.x += filter.x * (e.interval / 1000);
+			// velocity.y += filter.y * (e.interval / 1000);
+			// velocity.z += filter.z * (e.interval / 1000);
+
+			velocity.x = (velocity.x + filter.x) / 2;
+			velocity.y = (velocity.y + filter.y) / 2;
+			velocity.z = (velocity.z + filter.z) / 2;
+
+			// for (var k in velocity){
+			// 	if (velocity.hasOwnProperty(k)) {
+			// 		let val = parseFloat(velocity[k]);
+			// 		if (val > 0) velocity[k] = val - 2;
+			// 		if (val < 0) velocity[k] = val + 2;
+			// 	}
+			// }
 
 			socket.emit('brush:move', {
 				acceleration: {
@@ -121,7 +140,8 @@ function initApp() {
 		let prevAcceleration = {x: (canvas.width / 2), y: 0, z: (canvas.height / 2)},
 			thisAcceleration = prevAcceleration;
 
-		// console.log(prevAcceleration);
+		brush.pos.x = (canvas.width / 2) + (brush.size / 2);
+		brush.pos.y = (canvas.height / 2) + (brush.size / 2);
 
 		socket.on('canvas:move', (data) => {
 			document.querySelector('.log > table tbody').innerHTML += `
@@ -132,19 +152,9 @@ function initApp() {
 				</tr>
 			`;
 
-			thisAcceleration = {
-				x: prevAcceleration.x - parseFloat(data.acceleration.x),
-				y: prevAcceleration.y - parseFloat(data.acceleration.y),
-				z: prevAcceleration.z - parseFloat(data.acceleration.z),
-			};
-
-			// console.log(brush, data.velocity);
-
 			// parseInt because I don't want the decimals anyway, there are no 0.005 pixels...
-			// brush.pos.x += parseFloat(data.velocity.x);
-			// brush.pos.y += parseFloat(data.velocity.z);
-			brush.pos.x += (parseFloat(data.velocity.x) * parseInt(data.interval)) / 10;
-			brush.pos.y += (parseFloat(data.velocity.z) * parseInt(data.interval)) / 10;
+			brush.pos.x += parseFloat(data.velocity.x);
+			brush.pos.y += parseFloat(data.velocity.z);
 
 			checkBounds();
 
@@ -174,7 +184,7 @@ function redraw() {
 }
 
 function brushMove() {
-	console.log(brush.pos.x, brush.pos.y);
+	// console.log(brush.pos.x, brush.pos.y);
 	redraw();
 	context.beginPath();
 	context.fillStyle = "rgba(10,10,10,0.8)";
@@ -364,7 +374,19 @@ NodeList.prototype.remove = HTMLCollection.prototype.remove = function() {
 }
 
 
+class HighPassFilterData {
+  constructor(cutoffFrequency) {
+    Object.assign(this, { x: 0, y: 0, z: 0 });
+    this.cutoff = cutoffFrequency;
+  }
 
+  update(reading, dt) {
+    for (let i of ['x', 'y', 'z']) {
+      let alpha = this.cutoff / (this.cutoff + dt);
+      this[i] = this[i] + alpha * (reading[i] - this[i]);
+    }
+  }
+};
 
 
 
