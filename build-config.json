@@ -8,7 +8,7 @@
 	"targets": [
 		{
 			"id": "index",
-			"seo-title": "Audio visualizer",
+			"seo-title": "Phone drawing",
 			"seo-description": "",
 			"src-html": "index.html",
 			"src-sass": "main.scss",

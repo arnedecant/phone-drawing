@@ -42,7 +42,7 @@ class App {
 			vertex: document.querySelector('[data-shader="vertex"]').textContent,
 			fragment: document.querySelector('[data-shader="fragment"]').textContent
 		}
-		
+
 		this.cache = { }
 		this.uniforms = { }
 
@@ -50,7 +50,7 @@ class App {
 
 		document.body.addEventListener('click', this.click.bind(this))
 		window.addEventListener('devicemotion', (e) => console.log('devicemotion', e))
-		
+
 		// this.modals.privacy.onClose.addListener(this.init.bind(this))
 
 		// setup
@@ -114,7 +114,7 @@ class App {
 	}
 
 	click (e) {
-		
+
 
 
 	}
@@ -124,9 +124,9 @@ class App {
     // render ENGINE
 
 		// ENGINE.render()
-		
+
 		// Do stuff
-		
+
 		// ...
 
 		// add self to the requestAnimationFrame

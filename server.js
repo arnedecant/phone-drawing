@@ -11,18 +11,18 @@ app.use(express.static(__dirname + '/public'))
 var server = io.on('connection', function (socket) {
 
   // A new client has come online
-  
+
 	socket.on('load', (data) => {
 		socket.emit('access', { access: (data.key === secret) ? 'granted' : 'denied' })
   })
-  
+
   // Client has set data
 
 	socket.on('data-updated', (data) => {
 		if (data.key !== secret) return
 		server.emit('set-data', { hash: data.hash })
   })
-  
+
   // Client has moved its brush
 
 	socket.on('brush:move', (data) => {
@@ -33,11 +33,11 @@ var server = io.on('connection', function (socket) {
 			color: data.color
 		})
   })
-  
+
   // Logging
 
   socket.on('log', (data) => server.emit('log', { data: data }))
-  
+
 })
 
 console.log('Your app is running on http://localhost:' + port);
