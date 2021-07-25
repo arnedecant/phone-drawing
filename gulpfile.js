@@ -1,88 +1,237 @@
-var gulp = require('gulp');
-var sass = require('gulp-sass');
-var sassGlob = require('gulp-sass-glob');
-var browserSync = require('browser-sync').create();
+// --------------------------------------------------------------
+// :: GULP CONFIGURATION
+// --------------------------------------------------------------
+// Build configuration
 
-var useref = require('gulp-useref');
-var uglify = require('gulp-uglify');
-var gulpIf = require('gulp-if');
-var cssnano = require('gulp-cssnano');
-var autoprefixer = require('gulp-autoprefixer');
-var sourcemaps = require('gulp-sourcemaps');
+const config = require('./build-config.json')
 
-var imagemin = require('gulp-imagemin');
-var cache = require('gulp-cache');
+// Gulp dependencies
 
-var del = require('del');
-var runSequence = require('run-sequence');
+const gulp = require('gulp')
+const plugins = require('gulp-load-plugins')()
 
-gulp.task('sass', function() {
-	return gulp.src('app/scss/**/*.scss')
-    .pipe(sassGlob())
-		.pipe(sourcemaps.init())
-    	.pipe(sass({
-    		errLogToConsole: true
-    	}))
-    	.pipe(sourcemaps.write())
-    	.pipe(autoprefixer({
-			browsers: ['last 2 versions'],
-			cascade: false
-		}))
-    	.pipe(gulp.dest('app/css'))
-    	.pipe(browserSync.reload({
-			stream: true
-		}));
-});
+// Other dependencies
 
-gulp.task('browserSync', function() {
-  browserSync.init({
-    // proxy: "dev.local",
-    server: {
-      baseDir: 'app'
-    },
-  });
-});
+const livereload = require('browser-sync').create()
+const webpack = require('webpack-stream')
+const merge = require('merge-stream')
+const del = require('del')
 
-gulp.task('watch', ['browserSync', 'sass'], function(){
-	gulp.watch('app/scss/**/*.scss', ['sass']);
-  gulp.watch('app/*.html', browserSync.reload);
-  gulp.watch('app/*.php', browserSync.reload); 
-	gulp.watch('app/js/**/*.js', browserSync.reload); 
-});
 
-gulp.task('useref', function(){
-  return gulp.src('app/*.html')
-    .pipe(useref())
-    .pipe(gulpIf('*.js', uglify()))
-    .pipe(gulpIf('*.css', cssnano()))
-    .pipe(gulp.dest('dist'))
-});
+// --------------------------------------------------------------
+// :: SASS
+// --------------------------------------------------------------
+// - https://www.npmjs.org/package/gulp-plumber
+// - https://www.npmjs.com/package/gulp-sass
+// - https://www.npmjs.org/package/gulp-autoprefixer
+// - https://www.npmjs.com/package/merge-stream
 
-gulp.task('images', function(){
-  return gulp.src('app/img/**/*.+(png|jpg|jpeg|gif|svg)')
-  // Caching images that ran through imagemin
-  .pipe(cache(imagemin()))
-  .pipe(gulp.dest('dist/img'))
-});
+gulp.task('sass', () => {
 
-gulp.task('fonts', function() {
-  return gulp.src('app/fonts/**/*')
-  .pipe(gulp.dest('dist/fonts'))
-});
+	let tasks = config.targets.map((target) => {
 
-gulp.task('clean:dist', function() {
-  return del.sync('dist');
-});
+		return gulp.src('src/sass/'+target['src-sass'])
+			.pipe(plugins.plumber())
+			.pipe(plugins.sass({
 
-gulp.task('default', function (callback) {
-  runSequence(['sass','browserSync', 'watch'],
-    callback
-  )
-});
+				outputStyle: config.production ? 'compressed' : 'expanded',
+				sourceComments: !config.production
 
-gulp.task('build', ['clean:dist', 'sass', 'useref', 'images', 'fonts'], function (callback) {
-  runSequence('clean:dist', 
-    ['sass', 'useref', 'images', 'fonts'],
-    callback
-  )
-});
+			}).on('error', plugins.sass.logError))
+			.pipe(plugins.autoprefixer('last 2 versions'))
+			.pipe(plugins.rename(target['id']+'.css'))
+			.pipe(gulp.dest('public/css'))
+			.pipe(livereload.stream())
+
+	})
+
+	return merge(tasks)
+
+})
+
+
+// --------------------------------------------------------------
+// :: SCRIPTS
+// --------------------------------------------------------------
+// - https://github.com/shama/webpack-stream
+
+gulp.task('scripts', () => {
+
+	return gulp.src('src/js/*.js')
+		.pipe(plugins.plumber())
+		.pipe(webpack(require('./webpack.js')))
+		.pipe(gulp.dest('public/js'))
+
+})
+
+
+// --------------------------------------------------------------
+// :: HTML
+// --------------------------------------------------------------
+// - https://www.npmjs.org/package/gulp-plumber
+// - https://www.npmjs.com/package/gulp-file-include
+// - https://www.npmjs.org/package/gulp-htmlmin
+// - https://www.npmjs.org/package/gulp-rename
+// - https://www.npmjs.com/package/merge-stream
+
+gulp.task('html', () => {
+
+	let tasks = config.targets.map((target) => {
+
+		return gulp.src('src/html/'+target['src-html'])
+			.pipe(plugins.plumber())
+			.pipe(plugins.fileInclude({
+
+				prefix: '@@',
+				basepath: 'src/html',
+				context: {
+
+					// Inject build-target specific
+					// content into our templates
+
+					'buildTarget': target['id'],
+					'seoTitle': target['seo-title'],
+					'seoDescription': target['seo-description'],
+					'url': target['url']
+
+				}
+
+			}))
+			.pipe(plugins.htmlmin({
+
+	        	collapseWhitespace: config.production,
+	        	removeComments: config.production
+
+	        }))
+			.pipe(plugins.rename(target['id']+'.html'))
+			.pipe(gulp.dest('public'))
+
+	})
+
+	return merge(tasks)
+
+})
+
+
+// --------------------------------------------------------------
+// :: IMAGES
+// --------------------------------------------------------------
+// - https://www.npmjs.org/package/gulp-plumber
+// - https://www.npmjs.org/package/gulp-imagemin
+// - https://www.npmjs.com/package/merge-stream
+
+gulp.task('images', () => {
+
+	let options = {
+		optimizationLevel: 7,
+		progressive: true,
+		interlaced: true,
+		verbose: true
+	};
+
+	let images = gulp.src('src/img/**')
+		.pipe(plugins.plumber())
+		.pipe(plugins.imagemin(options))
+		.pipe(gulp.dest('public/img'))
+
+	let seo = gulp.src('src/seo/*.+(ico|jpg|png)')
+		.pipe(plugins.plumber())
+		.pipe(plugins.imagemin(options))
+		.pipe(gulp.dest('public'))
+
+	return merge([images, seo])
+
+})
+
+
+// --------------------------------------------------------------
+// :: COPY
+// --------------------------------------------------------------
+// - https://www.npmjs.org/package/gulp-plumber
+// - https://www.npmjs.org/package/gulp-rename
+// - https://www.npmjs.com/package/merge-stream
+
+gulp.task('copy', () => {
+
+	let fonts = gulp.src('src/fonts/**')
+		.pipe(plugins.plumber())
+		.pipe(gulp.dest('public/fonts'))
+
+    let vendor = gulp.src('src/js/vendor/**')
+		.pipe(plugins.plumber())
+		.pipe(gulp.dest('public/js/vendor'))
+
+	let assets = gulp.src('src/assets/**')
+		.pipe(plugins.plumber())
+		.pipe(gulp.dest('public/assets'))
+
+	let shaders = gulp.src('src/shaders/**')
+		.pipe(plugins.plumber())
+		.pipe(gulp.dest('public/shaders'))
+
+	return merge([fonts, vendor, assets, shaders])
+
+})
+
+
+// --------------------------------------------------------------
+// :: CLEAN
+// --------------------------------------------------------------
+// - https://www.npmjs.org/package/del
+
+gulp.task('clean', () => {
+
+	return del(['public'])
+
+})
+
+
+// --------------------------------------------------------------
+// :: BUILD
+// --------------------------------------------------------------
+
+gulp.task('build', gulp.series('clean', gulp.parallel('sass', 'scripts', 'html', 'copy', 'images')))
+
+
+// --------------------------------------------------------------
+// :: LIVE-RELOAD
+// --------------------------------------------------------------
+// - https://browsersync.io/docs/gulp
+// - https://browsersync.io/docs/options
+
+gulp.task('watch', gulp.series('build', () => {
+
+	livereload.init({
+		server: {
+			baseDir: 'public'
+			//https: true // serve https on localhost!
+		},
+		reloadOnRestart: true,
+		reloadDebounce: 500,
+		notify: false
+	})
+
+	// Run tasks on file-change
+	// NOTE: To speed up development we disable some watchers
+	// NOTE: Updates not coming through? Run 'gulp build'
+
+	gulp.watch('src/sass/**', gulp.parallel('sass'))
+	gulp.watch('src/js/**', gulp.parallel('scripts'))
+	gulp.watch('src/html/**', gulp.parallel('html'))
+	gulp.watch('src/shaders/**', gulp.parallel('html'))
+	gulp.watch('src/assets/data.json', gulp.parallel('copy'))
+	//gulp.watch('src/js/vendor/**', gulp.parallel('copy'))
+	//gulp.watch('src/img/**', gulp.parallel('images'))
+	//gulp.watch('src/seo/**', gulp.series('images','copy'))
+	//gulp.watch('src/fonts/**', gulp.parallel('copy'))
+
+	// Watch changes in the /public folder
+	// NOTE: Changes in .css files are triggered from the sass task
+
+	return gulp.watch([
+		'public/**/*.html',
+		'public/js/**/*',
+		'public/assets/data.json'
+	]).on('change', livereload.reload)
+
+}))
