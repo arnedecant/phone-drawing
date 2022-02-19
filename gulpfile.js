@@ -16,6 +16,7 @@ const livereload = require('browser-sync').create()
 const webpack = require('webpack-stream')
 const merge = require('merge-stream')
 const del = require('del')
+const sass = require('gulp-sass')(require('sass'))
 
 
 // --------------------------------------------------------------
